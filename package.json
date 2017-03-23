@@ -1,7 +1,7 @@
 {
   "name": "tutorial-create-your-own-react-router",
   "version": "0.0.0",
-  "description": "react-router studie ",
+  "description": "react-router studies",
   "main": "index.js",
   "scripts": {
     "start": "if-env NODE_ENV=production && npm run start:prod || npm run start:dev",
