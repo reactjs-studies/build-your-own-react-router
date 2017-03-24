@@ -9,9 +9,11 @@ module.exports = {
         filename: 'bundle.js',
     },
     module: {
-        loaders: [
-            { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?presets[]=es2015&presets[]=react' }
-        ]
+        loaders: [{
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loaders: ['babel-loader?presets[]=es2015&presets[]=react', 'eslint-loader']
+        }]
     },
 
     plugins: process.env.NODE_ENV === 'production' ? [

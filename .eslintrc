@@ -1,0 +1,14 @@
+ {
+    "extends": [
+      "eslint-config-airbnb",
+    ],
+    "rules": {
+        "comma-style": ["error", "last"],
+        "quotes": ["error", "single"]
+    },
+    "env": {
+        "browser":true,
+        "node": true
+    }
+}
+
