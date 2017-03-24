@@ -5,6 +5,8 @@
     "rules": {
         "comma-style": ["error", "last"],
         "quotes": ["error", "single"],
+        "react/require-default-props": [1],
+        "react/prop-types": [1],
         "react/no-multi-comp": "off"
     },
     "env": {
