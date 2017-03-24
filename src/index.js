@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { ReactDOM } from 'react-dom';
+import  ReactDOM  from 'react-dom';
 
 const $ = React.createElement;
 const { bool, element, func, string } = PropTypes;
@@ -119,12 +119,12 @@ class Route extends Component {
     return null;
   }
 }
-Route.defaultProps = {
-  exact: false,
-  path: '',
-  component: noop,
-  render: noop,
-};
+// Route.defaultProps = {
+//   exact: false,
+//   path: '',
+//   component: noop,
+//   render: noop,
+// };
 
 Route.propTypes = {
   exact: bool,
@@ -154,10 +154,10 @@ class Link extends Component {
   }
 }
 
-Link.defaultProps = {
-  replace: false,
-  children: $('div', {}),
-};
+// Link.defaultProps = {
+//   replace: false,
+//   children: $('div', {}),
+// };
 
 Link.propTypes = {
   to: string.isRequired,
