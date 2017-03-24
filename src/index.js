@@ -1,13 +1,11 @@
 import React, { Component, PropTypes } from 'react';
-import  ReactDOM  from 'react-dom';
+import ReactDOM from 'react-dom';
 
 const $ = React.createElement;
-const { bool, element, func, string } = PropTypes;
+const { bool, func, string } = PropTypes;
 
 const map = fn =>
     xs => xs.map(fn);
-
-const noop = () => {};
 
 // ================
 // ROUTER
@@ -87,10 +85,9 @@ class Route extends Component {
             render,
         } = this.props;
 
-    const match = matchPath(
-            location.pathname, // global DOM variable
-            { path, exact },
-        );
+
+    const ops = { path, exact };
+    const match = matchPath(location.pathname, ops);
 
     if (!match) {
             // Do nothing because the current
@@ -162,7 +159,6 @@ class Link extends Component {
 Link.propTypes = {
   to: string.isRequired,
   replace: bool,
-  children: element,
 };
 
 class Redirect extends Component {
@@ -188,18 +184,11 @@ const RouteWithSubRoutes = route =>
     $(Route, {
       path: route.path,
       exact: route.exact,
-      render: props =>
-            $(route.component,
-                Object.assign({}, props, { routes: route.routes }),
-            ),
+      render: props => $(route.component, Object.assign({}, props, { routes: route.routes })),
     });
 
-const mapRoutes = map(
-    item =>
-    $(RouteWithSubRoutes,
-        Object.assign({}, item, { key: `_${item.path}` }),
-    ),
-);
+const mapRoutes = map(item =>
+    $(RouteWithSubRoutes, Object.assign({}, item, { key: `_${item.path}` })));
 
 // ================
 // COMPONENTS
@@ -216,20 +205,14 @@ const Topics = ({ match, routes = [] }) => {
         { path: 'props-vs-state', label: 'Props vs State' },
   ];
 
-  const Links = map(
-        item =>
-        $('li', { key: item.path },
-            $(Link, { to: `${match.url}/${item.path}` }, item.label),
-        ),
-    )(topics);
+  const Links = map(item => ($('li', { key: item.path },
+        $(Link, { to: `${match.url}/${item.path}` }, item.label)
+    )))(topics);
 
-  return (
-        $('div', {},
-            $('h2', {}, 'Topics'),
-            $('ul', {}, Links),
-            mapRoutes(routes),
-        )
-  );
+  return ($('div', {},
+        $('h2', {}, 'Topics'),
+        $('ul', {}, Links),
+        mapRoutes(routes)));
 };
 
 const App = (routes) => {
@@ -239,24 +222,16 @@ const App = (routes) => {
         { path: '/topics', label: 'Topics' },
   ];
 
-  const Links = map(
-        item =>
-        $('li', { key: item.label },
-            $(Link, { to: item.path }, item.label),
-        ),
-    )(urls);
+  const Links = map(item => ($('li', { key: item.label },
+        $(Link, { to: item.path }, item.label)
+    )))(urls);
 
-  return (
-        $('div', {},
-            $(Route, {
-              render: props => (
-                    $('pre', {}, `URL: ${JSON.stringify(props.match.url)}`)
-                ),
-            }),
-            $('ul', {}, Links),
-            mapRoutes(routes),
-        )
-  );
+  return ($('div', {},
+        $(Route, {
+          render: props => ($('pre', {}, `URL: ${JSON.stringify(props.match.url)}`)),
+        }),
+        $('ul', {}, Links),
+        mapRoutes(routes)));
 };
 
 // ================
