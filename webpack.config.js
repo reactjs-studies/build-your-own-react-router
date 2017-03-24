@@ -20,7 +20,7 @@ module.exports = {
         loaders: [{
             test: /\.js$/,
             exclude: /node_modules/,
-            loaders: ['babel-loader?presets[]=es2015&presets[]=react', 'eslint-loader'],
+            loaders: ['babel-loader'],
         }]
     },
 
