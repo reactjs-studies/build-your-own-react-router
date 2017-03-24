@@ -4,6 +4,9 @@ import { render } from 'react-dom';
 const $ = React.createElement;
 const { bool, func, string } = PropTypes;
 
+const map = (fn, xs) =>
+    (xs) => xs.map(fn);
+
 // ================
 // ROUTER
 // ================
@@ -169,6 +172,22 @@ Redirect.propTypes = {
     push: bool.isRequired
 };
 
+const RouteWithSubRoutes = (route) =>
+    $(Route, {
+        path: route.path,
+        exact: route.exact,
+        render: (props) =>
+            $(route.component,
+                Object.assign({}, props, { routes: route.routes })
+            )
+    });
+
+const mapRoutes = map(
+    (item) =>
+    $(RouteWithSubRoutes,
+        Object.assign({}, item, { key: `_${item.path}` })
+    )
+);
 
 // ================
 // COMPONENTS
@@ -176,86 +195,98 @@ Redirect.propTypes = {
 
 const Home = () => $('h2', {}, 'Home');
 const About = () => $('h2', {}, 'About');
-const Topic = (label = '') => $('h3', {}, label);
-const Topics = ({ match }) => {
+const Topic = ({ label = '' }) => $('h3', {}, label);
 
-    const links = [
-        { label: 'Rendering with React', to: 'rendering-with-react' },
-        { label: 'Components', to: 'components' },
-        { label: 'Props vs State', to: 'props-vs-state' },
+const Topics = ({ match, routes = [] }) => {
+
+    const topics = [
+        { path: 'rendering-with-react', label: 'Rendering with React' },
+        { path: 'components', label: 'Components' },
+        { path: 'props-vs-state', label: 'Props vs State' },
     ];
 
-    const render = (value) => () => Topic(value);
+    const Links = map(
+        (item) =>
+        $('li', { key: item.path },
+            $(Link, { to: `${match.url}/${item.path}` }, item.label)
+        )
+    )(topics);
 
     return (
         $('div', {},
             $('h2', {}, 'Topics'),
-
-            links.map(
-                (item) => (
-                    $('li', { key: item.label },
-                        $(Link, { to: `${match.url}/${item.to}` }, item.label)
-                    )
-                )
-            ),
-
-            links.map(
-                (item) => (
-                    $(Route, {
-                        key: item.label,
-                        path: `${match.url}/${item.to}`,
-                        render: render(item.label)
-                    })
-                )
-            ),
-
-            $(Route, {
-                path: match.url,
-                exact: true,
-                render: render('please select a topic')
-            })
+            $('ul', {}, Links),
+            mapRoutes(routes),
         )
     );
 };
 
-const App = ({ links = [] }) => (
-    $('div', {},
+const App = (routes) => {
 
-        $(Route, {
-            render: (props) => (
-                $('pre', {}, `URL: ${JSON.stringify(props.match.url)}`)
-            )
-        }),
+    const urls = [
+        { path: '/', label: 'Home' },
+        { path: '/about', label: 'About' },
+        { path: '/topics', label: 'Topics' },
+    ];
 
-        $('ul', {},
-            links.map((item) => (
-                $('li', { key: item.label },
-                    $(Link, { to: item.to }, item.label)
-                )
-            ))
-        ),
-
-        links.map((item) =>
-            $(Route, {
-                component: item.component,
-                exact: item.exact,
-                key: item.label,
-                path: item.to,
-            })
+    const Links = map(
+        (item) =>
+        $('li', { key: item.label },
+            $(Link, { to: item.path }, item.label)
         )
-    )
-);
+    )(urls);
+
+    return (
+        $('div', {},
+            $(Route, {
+                render: (props) => (
+                    $('pre', {}, `URL: ${JSON.stringify(props.match.url)}`)
+                )
+            }),
+            $('ul', {}, Links),
+            mapRoutes(routes)
+        )
+    );
+}
+
+// ================
+// Routes config
+// ================
+
+const renderTopic = (label) => {
+    return function TopicWrapper() {
+        return Topic({ label })
+    }
+};
+
+// routes config
+const routes = [{
+    path: '/',
+    component: Home,
+    exact: true
+}, {
+    path: '/about',
+    component: About,
+}, {
+    path: '/topics',
+    component: Topics,
+    routes: [{
+        path: '/topics',
+        component: renderTopic('please select a topic'),
+        exact: true
+    }, {
+        path: '/topics/rendering-with-react',
+        component: renderTopic('Rendering with react')
+    }, {
+        path: '/topics/components',
+        component: renderTopic('Components')
+    }, {
+        path: '/topics/props-vs-state',
+        component: renderTopic('Props vs State')
+    }],
+}];
 
 // ================
 // App
 // ================
-
-const props = {
-    links: [
-        { exact: true, to: '/', label: 'Home', component: Home },
-        { to: '/about', label: 'About', component: About },
-        { to: '/topics', label: 'Topics', component: Topics }
-    ]
-};
-
-render(App(props), window.document.getElementById('root'));
+render(App(routes), window.document.getElementById('root'));
