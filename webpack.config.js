@@ -9,10 +9,18 @@ module.exports = {
         filename: 'bundle.js',
     },
     module: {
+        rules: [{
+            test: /\.jsx?$/, // both .js and .jsx
+            loader: 'eslint-loader',
+            enforce: 'pre',
+            options: {
+                fix: true,
+            },
+        }],
         loaders: [{
             test: /\.js$/,
             exclude: /node_modules/,
-            loaders: ['babel-loader?presets[]=es2015&presets[]=react', 'eslint-loader']
+            loaders: ['babel-loader?presets[]=es2015&presets[]=react', 'eslint-loader'],
         }]
     },
 
