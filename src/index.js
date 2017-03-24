@@ -1,192 +1,204 @@
 import React, { Component, PropTypes } from 'react';
-import { render } from 'react-dom';
+import { ReactDOM } from 'react-dom';
 
 const $ = React.createElement;
-const { bool, func, string } = PropTypes;
+const { bool, element, func, string } = PropTypes;
 
-const map = (fn, xs) =>
-    (xs) => xs.map(fn);
+const map = fn =>
+    xs => xs.map(fn);
+
+const noop = () => {};
 
 // ================
 // ROUTER
 // ================
 
-let instances = [];
+const instances = [];
 
-const register = (comp) => instances.push(comp);
-const unregister = (comp) => instances.splice(instances.indexOf(comp), 1);
+const register = comp => instances.push(comp);
+const unregister = comp => instances.splice(instances.indexOf(comp), 1);
 
 const historyPush = (path) => {
-    history.pushState({}, null, path);
-    instances.forEach(instance => instance.forceUpdate());
-}
+  history.pushState({}, null, path);
+  instances.forEach(instance => instance.forceUpdate());
+};
 
 const historyReplace = (path) => {
-    history.replaceState({}, null, path);
-    instances.forEach(instance => instance.forceUpdate())
-}
+  history.replaceState({}, null, path);
+  instances.forEach(instance => instance.forceUpdate());
+};
 
 const matchPath = (pathname, options) => {
-    const { exact = false, path } = options;
+  const { exact = false, path } = options;
 
-    if (!path) {
-        return {
-            path: null,
-            url: pathname,
-            isExact: true,
-        }
-    }
+  if (!path) {
+    return {
+      path: null,
+      url: pathname,
+      isExact: true,
+    };
+  }
 
-    const match = new RegExp(`^${path}`).exec(pathname);
+  const match = new RegExp(`^${path}`).exec(pathname);
 
-    if (!match) {
+  if (!match) {
         // There wasn't a match.
-        return null
-    }
+    return null;
+  }
 
-    const url = match[0]
-    const isExact = pathname === url
+  const url = match[0];
+  const isExact = pathname === url;
 
-    if (exact && !isExact) {
+  if (exact && !isExact) {
         // There was a match, but it wasn't
         // an exact match as specified by
         // the exact prop.
-        return null
-    }
+    return null;
+  }
 
-    return {
-        path,
-        url,
-        isExact,
-    }
+  return {
+    path,
+    url,
+    isExact,
+  };
 };
 
 class Route extends Component {
 
-    componentWillMount() {
-        addEventListener("popstate", this.handlePop);
-        register(this);
-    }
+  componentWillMount() {
+    addEventListener('popstate', this.handlePop);
+    register(this);
+  }
 
-    componentWillUnmount() {
-        unregister(this);
-        removeEventListener("popstate", this.handlePop);
-    }
+  componentWillUnmount() {
+    unregister(this);
+    removeEventListener('popstate', this.handlePop);
+  }
 
-    handlePop() {
-        this.forceUpdate();
-    }
+  handlePop() {
+    this.forceUpdate();
+  }
 
-    render() {
-
-        const {
+  render() {
+    const {
             path,
             exact,
             component,
             render,
         } = this.props;
 
-        const match = matchPath(
+    const match = matchPath(
             location.pathname, // global DOM variable
-            { path, exact }
+            { path, exact },
         );
 
-        if (!match) {
+    if (!match) {
             // Do nothing because the current
             // location doesn't match the path prop.
 
-            return null
-        }
+      return null;
+    }
 
-        if (component) {
+    if (component) {
             // The component prop takes precedent over the
             // render method. If the current location matches
             // the path prop, create a new element passing in
             // match as the prop.
 
-            return $(component, { match })
-        }
+      return $(component, { match });
+    }
 
-        if (render) {
+    if (render) {
             // If there's a match but component
             // was undefined, invoke the render
             // prop passing in match as an argument.
 
-            return render({ match })
-        }
-
-        return null
+      return render({ match });
     }
+
+    return null;
+  }
+}
+Route.defaultProps = {
+  exact: false,
+  path: '',
+  component: noop,
+  render: noop,
 };
 
 Route.propTypes = {
-    exact: bool,
-    path: string,
-    component: func,
-    render: func,
+  exact: bool,
+  path: string,
+  component: func,
+  render: func,
 };
 
 class Link extends Component {
 
-    handleClick(event) {
+  handleClick(event) {
+    const { replace, to } = this.props;
+    event.preventDefault();
 
-        const { replace, to } = this.props
-        event.preventDefault()
+    const historyAction = replace ? historyReplace : historyPush;
+    historyAction(to);
+  }
 
-        const historyAction = replace ? historyReplace : historyPush;
-        historyAction(to);
-    }
-
-    render() {
-        const { to, children } = this.props
-        return (
+  render() {
+    const { to, children } = this.props;
+    return (
             $('a', {
-                href: to,
-                onClick: this.handleClick.bind(this),
+              href: to,
+              onClick: this.handleClick.bind(this),
             }, children)
-        )
-    }
+    );
+  }
+}
+
+Link.defaultProps = {
+  replace: false,
+  children: $('div', {}),
 };
 
 Link.propTypes = {
-    to: string.isRequired,
-    replace: bool,
+  to: string.isRequired,
+  replace: bool,
+  children: element,
 };
 
 class Redirect extends Component {
 
-    componentDidMount() {
-        const { to, push } = this.props
+  componentDidMount() {
+    const { to, push } = this.props;
 
-        const action = push ? historyPush : historyReplace;
-        action(to);
-    }
+    const action = push ? historyPush : historyReplace;
+    action(to);
+  }
 
-    render() {
-        return null
-    }
+  render() {
+    return null;
+  }
 }
 
 Redirect.propTypes = {
-    to: string.isRequired,
-    push: bool.isRequired
+  to: string.isRequired,
+  push: bool.isRequired,
 };
 
-const RouteWithSubRoutes = (route) =>
+const RouteWithSubRoutes = route =>
     $(Route, {
-        path: route.path,
-        exact: route.exact,
-        render: (props) =>
+      path: route.path,
+      exact: route.exact,
+      render: props =>
             $(route.component,
-                Object.assign({}, props, { routes: route.routes })
-            )
+                Object.assign({}, props, { routes: route.routes }),
+            ),
     });
 
 const mapRoutes = map(
-    (item) =>
+    item =>
     $(RouteWithSubRoutes,
-        Object.assign({}, item, { key: `_${item.path}` })
-    )
+        Object.assign({}, item, { key: `_${item.path}` }),
+    ),
 );
 
 // ================
@@ -198,95 +210,91 @@ const About = () => $('h2', {}, 'About');
 const Topic = ({ label = '' }) => $('h3', {}, label);
 
 const Topics = ({ match, routes = [] }) => {
-
-    const topics = [
+  const topics = [
         { path: 'rendering-with-react', label: 'Rendering with React' },
         { path: 'components', label: 'Components' },
         { path: 'props-vs-state', label: 'Props vs State' },
-    ];
+  ];
 
-    const Links = map(
-        (item) =>
+  const Links = map(
+        item =>
         $('li', { key: item.path },
-            $(Link, { to: `${match.url}/${item.path}` }, item.label)
-        )
+            $(Link, { to: `${match.url}/${item.path}` }, item.label),
+        ),
     )(topics);
 
-    return (
+  return (
         $('div', {},
             $('h2', {}, 'Topics'),
             $('ul', {}, Links),
             mapRoutes(routes),
         )
-    );
+  );
 };
 
 const App = (routes) => {
-
-    const urls = [
+  const urls = [
         { path: '/', label: 'Home' },
         { path: '/about', label: 'About' },
         { path: '/topics', label: 'Topics' },
-    ];
+  ];
 
-    const Links = map(
-        (item) =>
+  const Links = map(
+        item =>
         $('li', { key: item.label },
-            $(Link, { to: item.path }, item.label)
-        )
+            $(Link, { to: item.path }, item.label),
+        ),
     )(urls);
 
-    return (
+  return (
         $('div', {},
             $(Route, {
-                render: (props) => (
+              render: props => (
                     $('pre', {}, `URL: ${JSON.stringify(props.match.url)}`)
-                )
+                ),
             }),
             $('ul', {}, Links),
-            mapRoutes(routes)
+            mapRoutes(routes),
         )
-    );
-}
+  );
+};
 
 // ================
 // Routes config
 // ================
 
-const renderTopic = (label) => {
-    return function TopicWrapper() {
-        return Topic({ label })
-    }
+const renderTopic = label => function TopicWrapper() {
+  return Topic({ label });
 };
 
 // routes config
 const routes = [{
-    path: '/',
-    component: Home,
-    exact: true
+  path: '/',
+  component: Home,
+  exact: true,
 }, {
-    path: '/about',
-    component: About,
+  path: '/about',
+  component: About,
 }, {
+  path: '/topics',
+  component: Topics,
+  routes: [{
     path: '/topics',
-    component: Topics,
-    routes: [{
-        path: '/topics',
-        component: renderTopic('please select a topic'),
-        exact: true
-    }, {
-        path: '/topics/rendering-with-react',
-        component: renderTopic('Rendering with react')
-    }, {
-        path: '/topics/components',
-        component: renderTopic('Components')
-    }, {
-        path: '/topics/props-vs-state',
-        component: renderTopic('Props vs State')
-    }],
+    component: renderTopic('please select a topic'),
+    exact: true,
+  }, {
+    path: '/topics/rendering-with-react',
+    component: renderTopic('Rendering with react'),
+  }, {
+    path: '/topics/components',
+    component: renderTopic('Components'),
+  }, {
+    path: '/topics/props-vs-state',
+    component: renderTopic('Props vs State'),
+  }],
 }];
 
 // ================
 // App
 // ================
-render(App(routes), window.document.getElementById('root'));
+ReactDOM.render(App(routes), window.document.getElementById('root'));
