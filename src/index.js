@@ -116,12 +116,6 @@ class Route extends Component {
     return null;
   }
 }
-// Route.defaultProps = {
-//   exact: false,
-//   path: '',
-//   component: noop,
-//   render: noop,
-// };
 
 Route.propTypes = {
   exact: bool,
@@ -150,11 +144,6 @@ class Link extends Component {
     );
   }
 }
-
-// Link.defaultProps = {
-//   replace: false,
-//   children: $('div', {}),
-// };
 
 Link.propTypes = {
   to: string.isRequired,
